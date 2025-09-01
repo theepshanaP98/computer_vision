@@ -15,7 +15,9 @@ def apply_piecewise_lut(img_gray, control_pts):
     lut = np.interp(np.arange(256, dtype=np.float32), xs, ys).astype(np.uint8)
     return cv2.LUT(img_gray, lut), lut
 
+
 #Question 1
+#--------------------------------------------------------------------------
 img = cv2.imread("data/emma.jpg", cv2.IMREAD_GRAYSCALE)
 if img is None:
     raise FileNotFoundError("Image 'data/emma.jpg' not found or cannot be read.")
@@ -27,7 +29,9 @@ plt.figure(); plt.title("Q1 – Transform"); plt.xlabel("Input"); plt.ylabel("Ou
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.imshow(img, cmap="gray"); plt.title("Original"); plt.axis("off")
 plt.subplot(1,2,2); plt.imshow(out, cmap="gray"); plt.title("Transformed"); plt.axis("off"); plt.show(); savefig(OUTDIR/"q1_compare.png")
 
+
 #Question 2
+#--------------------------------------------------------------------------
 img = cv2.imread("data/brain_proton_density_slice.png", cv2.IMREAD_GRAYSCALE)
 
 def midtone_stretch_lut(m1, m2, low_gain=0.6, mid_gain=1.8, high_gain=0.7):
@@ -49,7 +53,9 @@ plt.subplot(1,3,2); plt.imshow(white, cmap="gray"); plt.title("White Matter"); p
 plt.subplot(1,3,3); plt.imshow(gray, cmap="gray"); plt.title("Gray Matter"); plt.axis("off")
 plt.show(); savefig(OUTDIR/"q2_compare.png")
 
+
 #Question 3
+#--------------------------------------------------------------------------
 img = cv2.imread("data/highlights_and_shadows.jpg")
 lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 L, a, b = cv2.split(lab)
@@ -62,6 +68,73 @@ cv2.imwrite(str(OUTDIR/"q3_gamma_corrected.jpg"), img_corr)
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.title("Q3 – L Histogram Before"); plt.hist(L.ravel(), bins=256, range=(0,255));
 plt.subplot(1,2,2); plt.title("Q3 – L Histogram After"); plt.hist(L_corr.ravel(), bins=256, range=(0,255)); plt.show(); savefig(OUTDIR/"q3_hist_L_compare.png")
 
-# Display the corrected image
-plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.imshow(cv2.cvtColor(ori_img, cv2.COLOR_BGR2RGB)); plt.title("Original"); plt.axis("off")
+plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)); plt.title("Original"); plt.axis("off")
 plt.subplot(1,2,2); plt.imshow(cv2.cvtColor(img_corr, cv2.COLOR_BGR2RGB)); plt.title("Q3 – Gamma Corrected Image"); plt.axis("off"); plt.show(); savefig(OUTDIR/"q3.png")
+
+
+#Question 4
+#--------------------------------------------------------------------------
+#Part (a)
+#-----------------------------------
+img = cv2.imread("data/spider.png")
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+H, S, V = cv2.split(hsv)
+
+plt.figure(figsize=(15, 5))
+plt.subplot(1, 3, 1); plt.imshow(H, cmap='gray'); plt.title('Q4 (a) - Hue Plane'); plt.axis('off')
+plt.subplot(1, 3, 2); plt.imshow(S, cmap='gray'); plt.title('Q4 (a) - Saturation Plane'); plt.axis('off')
+plt.subplot(1, 3, 3); plt.imshow(V, cmap='gray'); plt.title('Q4 (a) - Value Plane'); plt.axis('off')
+plt.show()
+
+#Part (b)
+#-----------------------------------
+sigma = 70.0
+a = 0.7
+x = np.arange(256, dtype=np.float32)
+boost = a * 128.0 * np.exp(-((x - 128.0)**2)/(2.0*(sigma**2)))
+f = np.minimum(x + boost, 255.0).astype(np.uint8)
+S2 = cv2.LUT(S, f)
+plt.figure(figsize=(8, 8)); plt.imshow(S2, cmap='gray'); plt.title('Q4 (b) - Transformed Saturation Plane'); plt.axis('off'); plt.show()
+
+#Part (c)
+#-----------------------------------
+a = 0.9
+print(f"Current value of 'a': {a}")
+
+#Part (d)
+#-----------------------------------
+sigma = 70.0
+a = 0.9 
+x = np.arange(256, dtype=np.float32)
+boost = a * 128.0 * np.exp(-((x - 128.0)**2)/(2.0*(sigma**2)))
+f = np.minimum(x + boost, 255.0).astype(np.uint8)
+S2 = cv2.LUT(S, f)
+img2 = cv2.cvtColor(cv2.merge([H,S2,V]), cv2.COLOR_HSV2BGR)
+plt.figure(); plt.imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)); plt.title('Q4 (d) - Recombined Image'); plt.axis('off'); plt.show()
+
+#Part (e)
+#-----------------------------------
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1); plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)); plt.title('Q4 (e) - Original Image'); plt.axis('off')
+plt.subplot(1, 2, 2); plt.imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)); plt.title('Q4 (e) - Vibrance Enhanced Image'); plt.axis('off')
+plt.show()
+plt.figure(); plt.plot(f); plt.title('Q4 (e) - Intensity Transformation (Saturation)'); plt.xlabel('Input Saturation'); plt.ylabel('Output Saturation'); plt.show()
+
+#Question 5
+#--------------------------------------------------------------------------
+#Part (a)
+#-----------------------------------
+img = cv2.imread("data/jeniffer.jpg")
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+H, S, V = cv2.split(hsv)
+
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 3, 1); plt.imshow(H, cmap='gray'); plt.title('Hue Plane'); plt.axis('off')
+plt.subplot(1, 3, 2); plt.imshow(S, cmap='gray'); plt.title('Saturation Plane'); plt.axis('off')
+plt.subplot(1, 3, 3); plt.imshow(V, cmap='gray'); plt.title('Value Plane'); plt.axis('off')
+plt.suptitle('Q5 (a) - HSV Planes')
+plt.show()
+
+#Part (b)
+#-----------------------------------
+
