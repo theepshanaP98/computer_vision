@@ -137,4 +137,51 @@ plt.show()
 
 #Part (b)
 #-----------------------------------
+_, mask = cv2.threshold(V, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
+plt.figure(figsize=(10, 6))
+plt.plot(mask, cmap='gray'); plt.title('Q5 (b) - Thresholded Mask'); plt.axis('off') 
+plt.show()
+
+#Part (c)
+#-----------------------------------
+fg = cv2.bitwise_and(V, V, mask=mask)
+
+hist_fg = cv2.calcHist([fg], [0], mask, [256], [0, 256])
+
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1); plt.imshow(fg, cmap='gray'); plt.title('Q5 (c) - Foreground Only'); plt.axis('off')
+plt.subplot(1, 2, 2); plt.plot(hist_fg); plt.title('Q5 (c) - Foreground Histogram'); plt.xlabel('Pixel Intensity'); plt.ylabel('Frequency')
+plt.show()
+
+#Part (d)
+#-----------------------------------
+hist_fg_cumsum = np.cumsum(hist_fg)
+
+plt.figure(figsize=(8, 5))
+plt.plot(hist_fg_cumsum); plt.title('Q5 (d) - Cumulative Sum of Foreground Histogram'); plt.xlabel('Pixel Intensity'); plt.ylabel('Cumulative Frequency')
+plt.show()
+
+#Part (e)
+#-----------------------------------
+cdf_min = hist_fg_cumsum[hist_fg_cumsum > 0].min()
+total_fg_pixels = hist_fg.sum()
+equalization_lut = np.zeros(256, dtype=np.uint8)
+equalization_lut[hist_fg_cumsum > cdf_min] = np.round(((hist_fg_cumsum[hist_fg_cumsum > cdf_min] - cdf_min) / (total_fg_pixels - cdf_min)) * 255).astype(np.uint8)
+eq_fg = cv2.LUT(fg, equalization_lut)
+
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1); plt.imshow(fg, cmap='gray'); plt.title('Q5 (e) - Original Foreground'); plt.axis('off')
+plt.subplot(1, 2, 2); plt.imshow(eq_fg, cmap='gray'); plt.title('Q5 (e) - Equalized Foreground'); plt.axis('off')
+plt.show()
+
+#Part (f)
+#-----------------------------------
+background = cv2.bitwise_and(V, V, mask=cv2.bitwise_not(mask))
+V2 = background + eq_fg
+img2 = cv2.cvtColor(cv2.merge([H, S, V2]), cv2.COLOR_HSV2BGR)
+
+plt.figure(figsize=(12, 6)) # Increased figure size
+plt.subplot(1, 2, 1); plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)); plt.title('Q5 (f) - Original Image'); plt.axis('off')
+plt.subplot(1, 2, 2); plt.imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)); plt.title('Q5 (f) - Final Result'); plt.axis('off')
+plt.show()
