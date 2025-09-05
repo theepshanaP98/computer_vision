@@ -1,13 +1,4 @@
 import numpy as np, cv2, matplotlib.pyplot as plt, os
-from pathlib import Path
-
-OUTDIR = Path("it5437_outputs")
-OUTDIR.mkdir(parents=True, exist_ok=True)
-
-def savefig(path):
-    plt.tight_layout()
-    plt.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close()
 
 def apply_piecewise_lut(img_gray, control_pts):
     xs = np.array([p[0] for p in control_pts], dtype=np.float32)
@@ -24,10 +15,9 @@ if img is None:
 control_pts = [(0, 0), (50, 50), (50, 100), (150, 255), (150,150), (255,255)]
 out, lut = apply_piecewise_lut(img, control_pts)
 
-cv2.imwrite(str(OUTDIR/"q1_output.png"), out)
-plt.figure(); plt.title("Q1 – Transform"); plt.xlabel("Input"); plt.ylabel("Output"); plt.plot(lut); plt.show(); savefig(OUTDIR/"q1_transform.png")
+plt.figure(); plt.title("Q1 – Transform"); plt.xlabel("Input"); plt.ylabel("Output"); plt.plot(lut); plt.show();
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.imshow(img, cmap="gray"); plt.title("Original"); plt.axis("off")
-plt.subplot(1,2,2); plt.imshow(out, cmap="gray"); plt.title("Transformed"); plt.axis("off"); plt.show(); savefig(OUTDIR/"q1_compare.png")
+plt.subplot(1,2,2); plt.imshow(out, cmap="gray"); plt.title("Transformed"); plt.axis("off"); plt.show()
 
 
 #Question 2
@@ -46,12 +36,12 @@ white = cv2.LUT(img, lut_white)
 gray = cv2.LUT(img, lut_gray)
 
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.title("Q2 – White Transform"); plt.plot(lut_white);
-plt.subplot(1,2,2); plt.title("Q2 – Gray Transform"); plt.plot(lut_gray); plt.show(); savefig(OUTDIR/"q2_transforms_compare.png")
+plt.subplot(1,2,2); plt.title("Q2 – Gray Transform"); plt.plot(lut_gray); plt.show()
 
 plt.figure(); plt.subplot(1,3,1); plt.imshow(img, cmap="gray"); plt.title("Original"); plt.axis("off")
 plt.subplot(1,3,2); plt.imshow(white, cmap="gray"); plt.title("White Matter"); plt.axis("off")
 plt.subplot(1,3,3); plt.imshow(gray, cmap="gray"); plt.title("Gray Matter"); plt.axis("off")
-plt.show(); savefig(OUTDIR/"q2_compare.png")
+plt.show()
 
 
 #Question 3
@@ -63,13 +53,12 @@ gamma = 0.6
 L_corr = np.clip(255.0 * ((L.astype(np.float32)/255.0) ** gamma), 0, 255).astype(np.uint8)
 lab_corr = cv2.merge([L_corr, a, b])
 img_corr = cv2.cvtColor(lab_corr, cv2.COLOR_LAB2BGR)
-cv2.imwrite(str(OUTDIR/"q3_gamma_corrected.jpg"), img_corr)
 
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.title("Q3 – L Histogram Before"); plt.hist(L.ravel(), bins=256, range=(0,255));
-plt.subplot(1,2,2); plt.title("Q3 – L Histogram After"); plt.hist(L_corr.ravel(), bins=256, range=(0,255)); plt.show(); savefig(OUTDIR/"q3_hist_L_compare.png")
+plt.subplot(1,2,2); plt.title("Q3 – L Histogram After"); plt.hist(L_corr.ravel(), bins=256, range=(0,255)); plt.show()
 
 plt.figure(figsize=(10, 5)); plt.subplot(1,2,1); plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)); plt.title("Original"); plt.axis("off")
-plt.subplot(1,2,2); plt.imshow(cv2.cvtColor(img_corr, cv2.COLOR_BGR2RGB)); plt.title("Q3 – Gamma Corrected Image"); plt.axis("off"); plt.show(); savefig(OUTDIR/"q3.png")
+plt.subplot(1,2,2); plt.imshow(cv2.cvtColor(img_corr, cv2.COLOR_BGR2RGB)); plt.title("Q3 – Gamma Corrected Image"); plt.axis("off"); plt.show()
 
 
 #Question 4
@@ -103,9 +92,6 @@ print(f"Current value of 'a': {a}")
 
 #Part (d)
 #-----------------------------------
-sigma = 70.0
-a = 0.9 
-x = np.arange(256, dtype=np.float32)
 boost = a * 128.0 * np.exp(-((x - 128.0)**2)/(2.0*(sigma**2)))
 f = np.minimum(x + boost, 255.0).astype(np.uint8)
 S2 = cv2.LUT(S, f)
@@ -147,7 +133,6 @@ plt.show()
 #Part (c)
 #-----------------------------------
 fg = cv2.bitwise_and(V, V, mask=mask)
-
 hist_fg = cv2.calcHist([fg], [0], mask, [256], [0, 256])
 
 plt.figure(figsize=(10, 5))
@@ -193,134 +178,190 @@ plt.show()
 #Part (a)
 #-----------------------------------
 img = cv2.imread("data/einstein.png", cv2.IMREAD_GRAYSCALE)
-if img is None:
-    raise FileNotFoundError("Image 'data/einstein.png' not found or cannot be read.")
-Kx = np.array([[1,0,-1],[2,0,-2],[1,0,-1]], dtype=np.float32)
-Ky = np.array([[1,2,1],[0,0,0],[-1,-2,-1]], dtype=np.float32)
-Gx_filter2d = cv2.filter2D(img, cv2.CV_32F, Kx)
-Gy_filter2d = cv2.filter2D(img, cv2.CV_32F, Ky)
-mag_filter2d = cv2.magnitude(Gx_filter2d, Gy_filter2d); mag_filter2d = np.clip(mag_filter2d/mag_filter2d.max()*255,0,255).astype(np.uint8)
-cv2.imwrite(str(OUTDIR/"q6_mag_filter2d.png"), mag_filter2d)
-plt.figure(figsize=(8, 5))
-plt.plot(mag_filter2d); plt.title('Q6 (a) - Magnitude (filter2D)'); plt.xlabel('Pixel Intensity'); plt.ylabel('Frequency')
+assert img is not None, "Could not load data/einstein.png"
+
+Kx = np.array([[ 1, 0, -1],
+               [ 2, 0, -2],
+               [ 1, 0, -1]], dtype=np.float32)
+Ky = np.array([[ 1,  2,  1],
+               [ 0,  0,  0],
+               [-1, -2, -1]], dtype=np.float32)
+
+Gx = cv2.filter2D(img, cv2.CV_32F, Kx)
+Gy = cv2.filter2D(img, cv2.CV_32F, Ky)
+mag = cv2.magnitude(Gx, Gy)
+mag = (mag / (mag.max() + 1e-8) * 255).astype(np.uint8)
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img, cmap="gray")
+plt.title("Original Einstein Image")
+plt.axis("off")
+plt.subplot(1, 2, 2)
+plt.imshow(mag, cmap="gray")
+plt.title("Sobel (filter2D) – Gradient Magnitude")
+plt.axis("off")
 plt.show()
+
 
 #Part (b)
 #-----------------------------------
-h, w = img.shape
-Gx_manual = np.zeros((h, w), dtype=np.float32)
-Gy_manual = np.zeros((h, w), dtype=np.float32)
-img_padded = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REPLICATE).astype(np.float32)
+def conv2d_naive(img, kernel):
+    kh, kw = kernel.shape
+    ph, pw = kh // 2, kw // 2
+    padded = cv2.copyMakeBorder(img, ph, ph, pw, pw, borderType=cv2.BORDER_REFLECT)
+    out = np.zeros_like(img, dtype=np.float32)
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            roi = padded[i:i+kh, j:j+kw].astype(np.float32)
+            out[i, j] = np.sum(roi * kernel)
+    return out
 
-for i in range(1, h + 1):
-    for j in range(1, w + 1):
-        Gx_manual[i-1, j-1] = np.sum(img_padded[i-1:i+2, j-1:j+2] * Kx)
-        Gy_manual[i-1, j-1] = np.sum(img_padded[i-1:i+2, j-1:j+2] * Ky)
+Gx_manual = conv2d_naive(img, Kx)
+Gy_manual = conv2d_naive(img, Ky)
+mag_manual = cv2.magnitude(Gx_manual, Gy_manual)
+mag_manual = (mag_manual / (mag_manual.max() + 1e-8) * 255).astype(np.uint8)
 
-mag_manual = cv2.magnitude(Gx_manual, Gy_manual); mag_manual = np.clip(mag_manual/mag_manual.max()*255,0,255).astype(np.uint8)
-cv2.imwrite(str(OUTDIR/"q6_mag_manual.png"), mag_manual)
-plt.figure(figsize=(8, 5))
-plt.plot(mag_manual); plt.title('Q6 (b) - Magnitude (Manual)'); plt.xlabel('Pixel Intensity'); plt.ylabel('Frequency')
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img, cmap="gray")
+plt.title("Original Einstein Image")
+plt.axis("off")
+plt.subplot(1, 2, 2)
+plt.imshow(mag_manual, cmap="gray")
+plt.title("Sobel (manual) – Gradient Magnitude")
+plt.axis("off")
 plt.show()
+
 
 #Part (c)
 #-----------------------------------
-k_col = np.array([[1],[2],[1]], dtype=np.float32)
-k_row = np.array([[1,0,-1]], dtype=np.float32)
-Gx_separable = cv2.sepFilter2D(img, cv2.CV_32F, k_row, k_col)
-Gy_separable = cv2.sepFilter2D(img, cv2.CV_32F, k_col.T, k_row.T)
-mag_separable = cv2.magnitude(Gx_separable, Gy_separable); mag_separable = np.clip(mag_separable/mag_separable.max()*255,0,255).astype(np.uint8)
-cv2.imwrite(str(OUTDIR/"q6_mag_separable.png"), mag_separable)
-plt.figure(figsize=(15, 5))
-plt.subplot(1,3,1); plt.title("Q6 – Magnitude (filter2D)"); plt.imshow(mag_filter2d, cmap="gray"); plt.axis("off");
-plt.subplot(1,3,2); plt.title("Q6 – Magnitude (Manual)"); plt.imshow(mag_manual, cmap="gray"); plt.axis("off");
-plt.subplot(1,3,3); plt.title("Q6 – Magnitude (Separable)"); plt.imshow(mag_separable, cmap="gray"); plt.axis("off");
-plt.show(); savefig(OUTDIR/"q6_magnitudes_compare.png")
+smooth = np.array([1, 2, 1], dtype=np.float32)      
+deriv  = np.array([1, 0, -1], dtype=np.float32)     
+smooth_col = smooth.reshape(-1, 1)   
+deriv_row  = deriv.reshape(1, -1)   
+deriv_col  = deriv.reshape(-1, 1)   
+smooth_row = smooth.reshape(1, -1)  
+Gx = cv2.sepFilter2D(img, ddepth=cv2.CV_32F, kernelX=deriv_row, kernelY=smooth_col)
+Gy = cv2.sepFilter2D(img, ddepth=cv2.CV_32F, kernelX=smooth_row, kernelY=deriv_col)
+mag_separable = cv2.magnitude(Gx, Gy)
+mag_separable = (mag_separable / (mag_separable.max() + 1e-8) * 255).astype(np.uint8)
+
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(img, cmap="gray")
+plt.title("Original Einstein Image")
+plt.axis("off")
+plt.subplot(1, 2, 2)
+plt.imshow(mag_separable, cmap="gray")
+plt.title("Sobel (separable) – Gradient Magnitude")
+plt.axis("off")
+plt.show()
+
+
+plt.figure(figsize=(15, 8))
+plt.subplot(1, 4, 1)
+plt.imshow(img, cmap="gray")
+plt.title("Original Einstein Image")
+plt.axis("off")
+plt.subplot(1, 4, 2)
+plt.imshow(mag, cmap="gray")
+plt.title("Sobel (filter2D) – Gradient Magnitude")
+plt.axis("off")
+plt.subplot(1, 4, 3)
+plt.imshow(mag_manual, cmap="gray")
+plt.title("Sobel (manual) – Gradient Magnitude")
+plt.axis("off")
+plt.subplot(1, 4, 4)
+plt.imshow(mag_separable, cmap="gray")
+plt.title("Sobel (separable) – Gradient Magnitude")
+plt.axis("off")
+plt.show()
 
 
 #Question 7
 #--------------------------------------------------------------------------
 #Part (a) Nearest-neighbor interpolation
 #-----------------------------------
-def zoom_nearest(img, s):
+pairs = [
+    ("data/im01small.png", "data/im01.png"),
+    ("data/im02small.png", "data/im02.png"),
+    ("data/im03small.png", "data/im03.png"),
+]
+
+def zoom_nearest_to_size(img, H, W):
     h, w = img.shape[:2]
-    new_h, new_w = int(h*s), int(w*s)
-    ys = (np.arange(new_h)/s).round().astype(int); ys = np.clip(ys, 0, h-1)
-    xs = (np.arange(new_w)/s).round().astype(int); xs = np.clip(xs, 0, w-1)
-    return img[ys[:,None], xs[None,:]]
+    ys = (np.linspace(0, h-1, H)).round().astype(int)
+    xs = (np.linspace(0, w-1, W)).round().astype(int)
+    return img[ys[:, None], xs[None, :]]
 
-def normalized_ssd(a, b):
-    a = a.astype(np.float32); b = b.astype(np.float32)
-    if a.shape != b.shape:
-        raise ValueError("Size mismatch")
-    return np.sum((a-b)**2)/(np.sum(b**2)+1e-8)
+nearest_results, originals, smalls = [], [], []
 
-pairs = [("data/im01small.png","data/im01.png"),
-         ("data/im02small.png","data/im02.png"),
-         ("data/im03small.png","data/im03.png")]
-s = 4.0
-for small_path, orig_path in pairs:
-    small = cv2.imread(small_path); orig = cv2.imread(orig_path)
-    upN = zoom_nearest(small, s)
-    H, W = orig.shape[:2]; upN = upN[:H,:W]
-    ssdN = normalized_ssd(upN, orig)
-    print(os.path.basename(small_path), "SSD_nearest=", ssdN)
-    cv2.imwrite(str(OUTDIR/f"q7_up_nearest_{os.path.basename(small_path)}"), upN)
-    plt.figure(figsize=(8, 4))
-    plt.subplot(1, 2, 1); plt.imshow(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)); plt.title("Original"); plt.axis("off")
-    plt.subplot(1, 2, 2); plt.imshow(cv2.cvtColor(upN, cv2.COLOR_BGR2RGB)); plt.title(f"Nearest Neighbor (SSD: {ssdN:.4f})"); plt.axis("off")
-    plt.suptitle(f"Q7 – Nearest Neighbor Zoom Comparison for {os.path.basename(small_path)}")
+for small_name, large_name in pairs:
+    small = cv2.imread(f"{small_name}")
+    large = cv2.imread(f"{large_name}")
+    assert small is not None and large is not None, f"Missing: {small_name}, {large_name}"
+    H, W = large.shape[:2]
+    up_near = zoom_nearest_to_size(small, H, W)
+    nearest_results.append(up_near); originals.append(large); smalls.append(small)
+
+    plt.figure(figsize=(12,4))
+    plt.suptitle(f"{small_name} → Nearest zoom vs {large_name}")
+    plt.subplot(1,3,1); plt.imshow(cv2.cvtColor(small, cv2.COLOR_BGR2RGB)); plt.title("Small Input"); plt.axis("off")
+    plt.subplot(1,3,2); plt.imshow(cv2.cvtColor(up_near, cv2.COLOR_BGR2RGB)); plt.title("Zoomed (Nearest)"); plt.axis("off")
+    plt.subplot(1,3,3); plt.imshow(cv2.cvtColor(large, cv2.COLOR_BGR2RGB)); plt.title("Large Original"); plt.axis("off")
     plt.show()
+
+
 
 # Part (b) Bilinear interpolation
 #-----------------------------------
-def zoom_bilinear(img, s):
-    h, w = img.shape[:2]
-    new_h, new_w = int(h*s), int(w*s)
-    if img.ndim == 2:
-        img_f = img.astype(np.float32)
-        out = np.zeros((new_h,new_w), dtype=np.float32)
-        ys = (np.arange(new_h)+0.5)/s - 0.5; xs = (np.arange(new_w)+0.5)/s - 0.5
-        y0 = np.floor(ys).astype(int); x0 = np.floor(xs).astype(int)
-        y1 = np.clip(y0+1, 0, h-1); x1 = np.clip(x0+1, 0, w-1)
-        y0 = np.clip(y0, 0, h-1); x0 = np.clip(x0, 0, w-1)
-        wy = ys - y0; wx = xs - x0
-        for i in range(new_h):
-            for j in range(new_w):
-                Ia = img_f[y0[i], x0[j]]; Ib = img_f[y0[i], x1[j]]
-                Ic = img_f[y1[i], x0[j]]; Id = img_f[y1[i], x1[j]]
-                wa = (1-wx[j])*(1-wy[i]); wb = wx[j]*(1-wy[i])
-                wc = (1-wx[j])*wy[i];     wd = wx[j]*wy[i]
-                out[i,j] = Ia*wa + Ib*wb + Ic*wc + Id*wd
-        return np.clip(out,0,255).astype(img.dtype)
-    else:
-        chs = [zoom_bilinear(img[...,c], s) for c in range(img.shape[2])]
-        return np.stack(chs, axis=-1)
+def zoom_bilinear_to_size(img, H, W):
+    return cv2.resize(img, (W,H), interpolation=cv2.INTER_LINEAR)
 
-def normalized_ssd(a, b):
-    a = a.astype(np.float32); b = b.astype(np.float32)
-    if a.shape != b.shape:
-        raise ValueError("Size mismatch")
-    return np.sum((a-b)**2)/(np.sum(b**2)+1e-8)
+bilinear_results = []
 
-pairs = [("data/im01small.png","data/im01.png"),
-         ("data/im02small.png","data/im02.png"),
-         ("data/im03small.png","data/im03.png")]
-s = 4.0
-for small_path, orig_path in pairs:
-    small = cv2.imread(small_path); orig = cv2.imread(orig_path)
-    upB = zoom_bilinear(small, s)
-    H, W = orig.shape[:2]; upB = upB[:H,:W]
-    ssdB = normalized_ssd(upB, orig)
-    print(os.path.basename(small_path), "SSD_bilinear=", ssdB)
-    cv2.imwrite(str(OUTDIR/f"q7_up_bilinear_{os.path.basename(small_path)}"), upB)
+for (small_name, large_name), small, large in zip(pairs, smalls, originals):
+    H, W = large.shape[:2]
+    up_bilin = zoom_bilinear_to_size(small, H, W)
+    bilinear_results.append(up_bilin)
 
-    # Display the zoomed images and original
-    plt.figure(figsize=(8, 4))
-    plt.subplot(1, 2, 1); plt.imshow(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB)); plt.title("Original"); plt.axis("off")
-    plt.subplot(1, 2, 2); plt.imshow(cv2.cvtColor(upB, cv2.COLOR_BGR2RGB)); plt.title(f"Bilinear (SSD: {ssdB:.4f})"); plt.axis("off")
-    plt.suptitle(f"Q7 – Bilinear Zoom Comparison for {os.path.basename(small_path)}")
+    plt.figure(figsize=(12,4))
+    plt.suptitle(f"{small_name} → Bilinear zoom vs {large_name}")
+    plt.subplot(1,3,1); plt.imshow(cv2.cvtColor(small, cv2.COLOR_BGR2RGB)); plt.title("Small Input"); plt.axis("off")
+    plt.subplot(1,3,2); plt.imshow(cv2.cvtColor(up_bilin, cv2.COLOR_BGR2RGB)); plt.title("Zoomed (Bilinear)"); plt.axis("off")
+    plt.subplot(1,3,3); plt.imshow(cv2.cvtColor(large, cv2.COLOR_BGR2RGB)); plt.title("Large Original"); plt.axis("off")
     plt.show()
+
+#Comparison of Nearest and Bilinear with Original
+#-----------------------------------
+def nssd(a, b):
+    a = a.astype(np.float32); b = b.astype(np.float32)
+    return float(np.sum((a - b)**2) / (np.sum(b**2) + 1e-8))
+
+names = ["im01", "im02", "im03"]
+
+fig, ax = plt.subplots(3, 3, figsize=(14, 12))
+fig.suptitle("Original vs Nearest vs Bilinear (small → zoomed to original size)", fontsize=14, y=0.95)
+
+for r, (name, orig, near, bilin) in enumerate(zip(names, originals, nearest_results, bilinear_results)):
+    ax[r,0].imshow(cv2.cvtColor(orig,  cv2.COLOR_BGR2RGB));  ax[r,0].set_title(f"{name} Large Original"); ax[r,0].axis("off")
+    ax[r,1].imshow(cv2.cvtColor(near,  cv2.COLOR_BGR2RGB));  ax[r,1].set_title(f"{name} Nearest Zoom");   ax[r,1].axis("off")
+    ax[r,2].imshow(cv2.cvtColor(bilin, cv2.COLOR_BGR2RGB));  ax[r,2].set_title(f"{name} Bilinear Zoom");  ax[r,2].axis("off")
+
+plt.tight_layout()
+plt.show()
+
+print("=== Q7 Metrics (lower NSSD means closer to original) ===")
+for name, orig, near, bilin in zip(names, originals, nearest_results, bilinear_results):
+    H, W = orig.shape[:2]
+    near = near[:H, :W]
+    bilin = bilin[:H, :W]
+
+    nssd_near  = nssd(near,  orig)
+    nssd_bilin = nssd(bilin, orig)
+
+    print(f"{name}: NSSD(nearest) = {nssd_near:.6f} | NSSD(bilinear) = {nssd_bilin:.6f}")
+
 
 
 #Question 8
@@ -334,7 +375,6 @@ mask = np.zeros((h,w), np.uint8)
 bgdModel = np.zeros((1,65), np.float64); fgdModel = np.zeros((1,65), np.float64)
 cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
 mask2 = np.where((mask==2)|(mask==0), 0, 1).astype('uint8')
-
 fg = img * mask2[:,:,None]
 mask_bg = cv2.bitwise_not(mask2)
 bg = img * mask_bg[:,:,None]
@@ -346,8 +386,6 @@ plt.subplot(1,3,3); plt.title("Q8 (a) – Background"); plt.imshow(cv2.cvtColor(
 plt.suptitle("Q8 (a) - GrabCut Segmentation Results")
 plt.show();
 
-cv2.imwrite(str(OUTDIR/"q8_mask.png"), (mask2*255).astype(np.uint8)) 
-
 #Part (b)
 #------------------------------------
 blurred = cv2.GaussianBlur(img, (31,31), 0)
@@ -357,7 +395,6 @@ plt.subplot(1,2,1); plt.title("Q8 (b) – Original"); plt.imshow(cv2.cvtColor(im
 plt.subplot(1,2,2); plt.title("Q8 (b) – Enhanced Image"); plt.imshow(cv2.cvtColor(enhanced, cv2.COLOR_BGR2RGB)); plt.axis("off");
 plt.suptitle("Q8 (b) - Enhanced Image with Blurred Background")
 plt.show();
-cv2.imwrite(str(OUTDIR/"q8_enhanced.png"), enhanced)
 
 
 #Question 9
@@ -415,6 +452,15 @@ print("Estimated number of rice grains:", count)
 
 plt.figure(figsize=(8, 4)); plt.imshow(clean, cmap="gray"); plt.title("Q9 (e) - Cleaned Mask with Components"); plt.axis("off"); plt.show();
 
+#Display of all
+plt.figure(figsize=(8, 4))
+plt.subplot(1, 6, 1); plt.imshow(img, cmap='gray'); plt.title('Q9 - Original Image'); plt.axis('off')
+plt.subplot(1, 6, 2); plt.imshow(left_dn, cmap='gray'); plt.title('Q9 - Gaussian Blur'); plt.axis('off')
+plt.subplot(1, 6, 3); plt.imshow(right_dn, cmap='gray'); plt.title('Q9 - Median Blur'); plt.axis('off')
+plt.subplot(1, 6, 4); plt.imshow(denoised_img, cmap='gray'); plt.title('Q9 - Denoised Image'); plt.axis('off')
+plt.subplot(1, 6, 5); plt.imshow(th, cmap='gray'); plt.title('Q9 - Otsu Thresholding'); plt.axis('off')
+plt.subplot(1, 6, 6); plt.imshow(clean, cmap='gray'); plt.title('Q9 - After Morphology'); plt.axis('off')
+plt.show()
 
 #Question 10
 #--------------------------------------------------------------------------
@@ -426,7 +472,6 @@ if img is None:
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 lower_blue = np.array([90, 50, 50], dtype=np.uint8)
 upper_blue = np.array([140, 255, 255], dtype=np.uint8)
-
 mask_raw = cv2.inRange(hsv, lower_blue, upper_blue)
 
 plt.figure(figsize=(10,5))
@@ -476,7 +521,4 @@ scale = (d_mm / f_mm)**2 * (pixel_pitch_mm**2)
 areas_mm2 = areas_px * scale
 
 for i, (px_area, mm2_area) in enumerate(zip(areas_px, areas_mm2), start=1):
-    print(f"Sapphire {i}: pixels={int(px_area)}, area ≈ {mm2_area:.3f} mm^2 (p={pixel_pitch_mm} mm)")
-
-
-
+    print(f"Sapphire {i}: pixels={int(px_area)}, area ≈ {mm2_area:.3f} mm^2 (p={pixel_pitch_mm} mm/pixel)")
